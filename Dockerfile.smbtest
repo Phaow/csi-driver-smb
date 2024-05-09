@@ -1,0 +1,11 @@
+FROM registry.ci.openshift.org/ocp/builder:rhel-9-golang-1.21-openshift-4.16 AS builder
+WORKDIR /go/src/github.com/openshift/csi-driver-smb
+COPY . .
+RUN go install github.com/onsi/ginkgo/v2/ginkgo && \
+    cp $(which ginkgo) /usr/local/bin
+
+# "src" is built by a prow job when building final images.
+# It contains full repository sources + jq + pyhon with yaml module.
+FROM src
+LABEL description="SMB CSI Driver e2e test"
+COPY --from=builder /usr/local/bin/ginkgo /usr/local/bin
